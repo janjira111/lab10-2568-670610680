@@ -1,11 +1,24 @@
 import { UserCard } from "../components/UserCard";
 import { cleanUser } from "../libs/CleanUser";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 export default function RandomUserPage() {
-  const [users, setUsers] = useState("");
+  const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [genAmount, setGenAmount] = useState(1);
+
+  useEffect(() => {
+    const savedAmount = localStorage.getItem("genAmount");
+    if (savedAmount) {
+      setGenAmount(Number(savedAmount));
+    }
+  }, []);
+
+  const handleGenAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(event.target.value);
+    setGenAmount(value);
+    localStorage.setItem("genAmount", value.toString());
+  };
 
   const generateBtnOnClick = async () => {
     setIsLoading(true);
@@ -17,6 +30,8 @@ export default function RandomUserPage() {
     //Your code here
     //Process result from api response with map function. Tips use function from /src/libs/CleanUser
     //Then update state with function : setUsers(...)
+    const cleanUsers = users.map((user : any ) => cleanUser(user));
+    setUsers(cleanUsers);
   };
 
   return (
@@ -28,7 +43,7 @@ export default function RandomUserPage() {
           className="form-control text-center"
           style={{ maxWidth: "100px" }}
           type="number"
-          onChange={(event: any) => setGenAmount(event.target.value)}
+          onChange={handleGenAmountChange}
           value={genAmount}
         />
         <button className="btn btn-dark" onClick={generateBtnOnClick}>
@@ -38,7 +53,18 @@ export default function RandomUserPage() {
       {isLoading && (
         <p className="display-6 text-center fst-italic my-4">Loading ...</p>
       )}
-      {users && !isLoading && users.map(/*code map rendering UserCard here */)}
+      {users && !isLoading && users.map(
+        /*code map rendering UserCard here */
+        (user) => (
+        <UserCard
+          key={user.email}
+          name={user.name}
+          email={user.email}
+          imgUrl={user.imgUrl}
+          address={user.address}
+        />
+        )
+      )}
     </div>
   );
 }
